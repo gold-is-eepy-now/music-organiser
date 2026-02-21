@@ -128,8 +128,7 @@ def move_file(file_path: Path, destination_root: Path, info: TrackInfo, dry_run:
     target = unique_destination(target)
 
     if not dry_run:
-        destination.mkdir(parents=True, exist_ok=True)
-    shutil.move(str(file_path), str(target))
+        shutil.move(str(file_path), str(target))
 
     return target
 
