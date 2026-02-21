@@ -20,6 +20,7 @@ It reads ID3 metadata first (`artist`, `album`, `title`) and falls back to filen
 - Optional metadata enrichment to fill **missing** tags from online databases:
   - MusicBrainz (primary)
   - iTunes Search API (fallback)
+- If missing tags are filled for files inside `Unknown Artist` / `Unknown Album`, files are relocated into the discovered artist/album folders.
 
 ## Usage
 

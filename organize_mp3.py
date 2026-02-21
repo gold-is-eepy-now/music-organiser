@@ -128,7 +128,8 @@ def move_file(file_path: Path, destination_root: Path, info: TrackInfo, dry_run:
     target = unique_destination(target)
 
     if not dry_run:
-        shutil.move(str(file_path), str(target))
+        destination.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(file_path), str(target))
 
     return target
 
@@ -258,6 +259,32 @@ def infer_track_from_path(mp3: Path, output_root: Path) -> TrackInfo:
     )
 
 
+
+def relocate_file_from_unknown_folder(
+    file_path: Path,
+    output_root: Path,
+    inferred: TrackInfo,
+    artist: str,
+    album: str,
+    title: str,
+    dry_run: bool,
+) -> Path:
+    needs_relocation = inferred.album == UNKNOWN_ALBUM or inferred.artist == UNKNOWN_ARTIST
+    if not needs_relocation:
+        return file_path
+
+    destination = output_root / clean_name(artist, UNKNOWN_ARTIST) / clean_name(album, UNKNOWN_ALBUM)
+    target = destination / f"{clean_name(title, file_path.stem)}{file_path.suffix.lower()}"
+    target = unique_destination(target)
+
+    if dry_run:
+        print(f"Would relocate: {file_path} -> {target}")
+        return target
+
+    destination.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(file_path), str(target))
+    return target
+
 def enrich_output_metadata(output_root: Path, dry_run: bool = False) -> None:
     if EasyID3 is None:
         print("Skipping metadata enrichment: install 'mutagen' to write ID3 tags.")
@@ -312,12 +339,34 @@ def enrich_output_metadata(output_root: Path, dry_run: bool = False) -> None:
             print(f"No missing metadata to fill: {mp3}")
             continue
 
+        final_artist = tags.get("artist", [inferred.artist])[0]
+        final_album = tags.get("album", [inferred.album])[0]
+        final_title = tags.get("title", [inferred.title])[0]
+
         if dry_run:
             print(f"Would fill ({online.source}) {mp3}: {', '.join(updates)}")
+            relocate_file_from_unknown_folder(
+                mp3,
+                output_root,
+                inferred,
+                final_artist,
+                final_album,
+                final_title,
+                dry_run=True,
+            )
             continue
 
         tags.save(str(mp3))
-        print(f"Filled ({online.source}) {mp3}: {', '.join(updates)}")
+        relocated_path = relocate_file_from_unknown_folder(
+            mp3,
+            output_root,
+            inferred,
+            final_artist,
+            final_album,
+            final_title,
+            dry_run=False,
+        )
+        print(f"Filled ({online.source}) {relocated_path}: {', '.join(updates)}")
 
 
 def build_parser() -> argparse.ArgumentParser:
