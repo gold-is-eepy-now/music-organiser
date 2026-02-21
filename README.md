@@ -45,6 +45,18 @@ Fill missing metadata in output files after organizing:
 python3 organize_mp3.py /path/to/music --output /path/to/organized --enrich-output-metadata
 ```
 
+Scan an already organized folder recursively and only fill missing metadata (no moving):
+
+```bash
+python3 organize_mp3.py /path/to/already-organized --metadata-only --enrich-output-metadata
+```
+
+Windows example:
+
+```bash
+python organize_mp3.py D:/Music --metadata-only --enrich-output-metadata
+```
+
 ## Optional dependency
 
 To read/write metadata, install `mutagen`:

@@ -349,6 +349,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="After organizing, fill missing ID3 tags from MusicBrainz/iTunes in output songs",
     )
+    parser.add_argument(
+        "--metadata-only",
+        action="store_true",
+        help="Do not move files; only scan the source folder recursively and fill missing metadata",
+    )
     return parser
 
 
@@ -362,6 +367,12 @@ def main() -> int:
     files = list(iter_mp3_files(args.source))
     if not files:
         print("No MP3 files found.")
+        return 0
+
+    if args.metadata_only:
+        if not args.enrich_output_metadata:
+            print("Notice: --metadata-only was set; enabling --enrich-output-metadata.")
+        enrich_output_metadata(args.source, dry_run=args.dry_run)
         return 0
 
     if EasyID3 is None and not args.prefer_filename:
